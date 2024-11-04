@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>My first three.js app</title>
+	<style>
+		* {
+			font-family: 'Monaco';
+		}
+
+		#bgImage {
+			position: fixed;
+			/* Sticks the loading screen in place */
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100vh;
+			background-image: url('/assets/bgImage-D3q-W1Xi.png');
+			background-size: cover;
+			background-repeat: no-repeat;
+			background-position: center;
+			z-index: 99;
+			filter: blur(8px);
+			-webkit-filter: blur(8px);
+		}
+
+		#loadingScreen {
+			position: fixed;
+			/* Sticks the loading screen in place */
+			top: 0;
+			left: 0;
+			width: 100%;
+			display: flex;
+			z-index: 100;
+			justify-content: center;
+			/* Horizontal center */
+			align-items: center;
+			/* Vertical center */
+			height: 100vh;
+			/* Full viewport height */
+		}
+
+		/* HTML: <div class="loader"></div> */
+		.loader {
+			width: 60px;
+			aspect-ratio: 1;
+			animation: l5-0 1s infinite steps(1);
+		}
+
+		.loader::before,
+		.loader::after {
+			content: "";
+			position: absolute;
+			inset: 0 50% 50% 0;
+			transform-origin: bottom right;
+			animation:
+				l5-1 0.5s infinite linear alternate,
+				l5-2 0.5s infinite steps(1) alternate;
+		}
+
+		.loader::after {
+			--s: -1, -1;
+		}
+
+		@keyframes l5-0 {
+			0% {
+				transform: scale(1, 1) rotate(0deg)
+			}
+
+			50% {
+				transform: scale(1, -1) rotate(90deg)
+			}
+		}
+
+		@keyframes l5-1 {
+			0% {
+				transform: scale(var(--s, 1)) perspective(150px) rotateX(0deg)
+			}
+
+			100% {
+				transform: scale(var(--s, 1)) perspective(150px) rotateX(180deg)
+			}
+		}
+
+		@keyframes l5-2 {
+			0% {
+				background: #25b09b
+			}
+
+			50% {
+				background: #514b82
+			}
+		}
+
+		body {
+			margin: 0;
+			background-color: rgb(31, 32, 32);
+		}
+
+		#startScreen {
+			display: none;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			text-align: center;
+			height: 100vh;
+			/* Full viewport height */
+			/*background-color: rgb(223, 230, 236);*/
+			z-index: 100;
+			gap: 10px;
+		}
+
+		#goBack {
+			display: none;
+			position: absolute;
+			top: 0;
+			left: 0;
+			margin: 10px;
+
+		}
+
+		/*
+		.btn {
+			padding: 10px 20px;
+			font-size: 16px;
+			cursor: pointer;
+			border: none;
+			border-radius: 5px;
+			background-color: #007BFF;
+			color: white;
+			transition: background-color 0.3s ease;
+		}
+
+		.btn:hover {
+			background-color: #0056b3;
+		}*/
+
+		#singleDemoGUI {
+			display: none;
+			text-align: center;
+			margin: 10px;
+		}
+
+		#GUI {
+			display: none;
+			text-align: center;
+			margin: 10px;
+		}
+
+		#GUIButtons {
+			display: flex;
+			flex-direction: column;
+		}
+
+		#trialHeaderInfo {
+			text-align: center;
+			color: aliceblue;
+			margin: 50px;
+		}
+
+		#container {
+			display: none;
+			justify-content: center;
+			align-items: center;
+			height: 100%;
+			/* 100% of the viewport height */
+		}
+
+		#arucoCanvas {
+			height: auto;
+			width: 50%;
+			border-style: solid;
+			border-color: red;
+			display: none;
+		}
+
+		#markerCountText {
+			color: red;
+			position: absolute;
+			top: 0;
+			margin: 10px;
+		}
+
+		#timeInMS {
+
+			color: red;
+			margin: 10px;
+		}
+
+		#droppedFrames {
+			color: red;
+			margin: 10px;
+		}
+
+		#trialNumberText {
+			color: red;
+			margin: 10px;
+		}
+
+		#enableRealTime {
+			margin: 5px;
+		}
+
+		#startScreenText {
+			color: aliceblue;
+			background-color: rgba(24, 24, 24, 0.5);
+			padding: 10px;
+		}
+
+
+		#resolutionTab {
+			/*position: fixed; */
+			display: none;
+			font-size: small;
+			justify-content: center;
+			/*flex-direction: column;*/
+			/*top: 50%;        
+			left: 0;   */
+			margin: 10px;
+			height: auto;
+			/*transform: translateY(-50%); */
+			text-align: center;
+			color: aliceblue;
+			z-index: 100;
+			gap: 2px;
+		}
+
+		#resolutionText {
+			color: red;
+			margin: 10px;
+		}
+
+		#phoneMessage {
+			position: fixed;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			text-align: center;
+			height: 100vh;
+			width: 100vw;
+			background-color: rgba(24, 24, 24, 1);
+			color: aliceblue;
+			z-index: 10000;
+			opacity: 1;
+			transition: 1.5s opacity;
+
+		}
+
+		#phone {
+			width:25%; 
+			height: auto;
+			animation: rotate 2s linear infinite;
+		}
+
+		@keyframes rotate {
+			0% {
+				transform: rotate(0deg);
+			}
+
+			50% {
+				transform: rotate(90deg);
+				/* Rotate to 90 degrees at 50% */
+			}
+
+			75% {
+				transform: rotate(90deg);
+				/* Hold at 90 degrees */
+			}
+
+			100% {
+				transform: rotate(0deg);
+				/* Return to starting position */
+			}
+		}
+
+
+		#phoneMessage.fade-out {
+			opacity: 0;
+			/* Target opacity */
+		}
+	</style>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+	<script src="positionData.js"></script>
+	<script src="tesFPS.js"></script>
+  <script type="module" crossorigin src="assets/index-C5AfQqFG.js"></script>
+  <link rel="stylesheet" crossorigin href="assets/index-Fwoy1gxh.css">
+</head>
+
+<body>
+	<div id="phoneMessage">
+		If you are using a mobile device, please turn it landscape!
+		<img src="assets/phone-CQsD00b9.png" id="phone"></img>
+	</div>
+
+	<div id="bgImage"></div>
+	<div id="loadingScreen">
+		<div class="loader"></div>
+	</div>
+	<button id="goBack" class="btn">Go Back</button>
+
+	<div id="startScreen">
+		<h2 id="startScreenText">Welcome, please select one of the buttons to see how we track objects in our
+			experiments!</h2>
+		<button id="singleCubeDemo" class="btn" disabled>Try Single Cube Demo</button>
+		<button id="trialPlayBack" class="btn" disabled>Try Trial Playback Demo</button>
+	</div>
+
+	<div id=container>
+		<h4 id='trialHeaderInfo'></h4>
+		<canvas id="arucoCanvas"></canvas>
+	</div>
+	<div id="GUI">
+		<div style="display: flex;">
+			<div id="trialNumberText"></div>
+			<div id="timeInMS"></div>
+			<div id="droppedFrames"></div>
+		</div>
+
+		<div id="resolutionText">Resolution = 1</div>
+
+		<div id="GUIButtons">
+
+			<button id="enableRealTime" class="btn">Enable Real Time Playback</button>
+			<div>
+				<button id="changeTrialBackward" class="btn">Previous Trial</button>
+				<button id="changeTrialForward" class="btn">Next Trial</button>
+				<button id="changeView" class="btn">Change View</button>
+			</div>
+
+			<div id="resolutionTab">
+				<button class="ResBtn" id="decreaseResolution">Decrease Resolution</button>
+				<button class="ResBtn" id="increaseResolution">Increase Resolution</button>
+			</div>
+		</div>
+	</div>
+
+	<div id="singleDemoGUI">
+		<div id="resolutionText">Resolution = 1</div>
+		<div id="resolutionTab">
+			<button class="ResBtn" id="decreaseResolution">Decrease Resolution</button>
+			<button class="ResBtn" id="increaseResolution">Increase Resolution</button>
+		</div>
+	</div>
+
+
+
+
+
+</body>
+
+</html>
